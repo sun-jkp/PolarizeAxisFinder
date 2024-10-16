@@ -19,20 +19,46 @@ class IDSCamera:
             # Update the device manager
             device_manager.Update()
 
+            # device_found_callback = device_manager.DeviceFoundCallback(
+            #     lambda new_dev: print("Device found: {}", new_dev.DisplayName()))
+            # device_found_callback_handle = device_manager.RegisterDeviceFoundCallback(device_found_callback)
+            # device_manager.Update()
+            # device_manager.UnregisterDeviceFoundCallback(device_found_callback_handle)
+
             # Return if no device was found
             if device_manager.Devices().empty():
+                print('Not found camera')
                 return False
 
             # open the first openable device in the device manager's device list
             device_count = device_manager.Devices().size()
+            # print(device_count)
             for i in range(device_count):
+                # print("sss")
+                # dev = device_manager.Devices()[i]
+                
+                # print(dev.Info(1))
+                # print(dev.DisplayName())
+                # print(dev.ModelName())
+                # print(dev.Key())
+                # print(dev.ParentInterface())
+                # print(dev.TLType())
+                # print(dev.UserDefinedName())
+                # print(dev.ID())
+                # print(dev.IsOpenable())
+                # print(dev.SerialNumber())
+                # print(dev.TimestampTickFrequency())
+                # print(dev.Info(3))
                 if device_manager.Devices()[i].IsOpenable():
-                    self.m_device = device_manager.Devices()[i].OpenDevice(peak.DeviceAccessType_Control)
+                    if('GEVK' in device_manager.Devices()[i].Key()):
+                #     print('vv')
+                        self.m_device = device_manager.Devices()[i].OpenDevice(peak.DeviceAccessType_Control)
         
-                    # Get NodeMap of the RemoteDevice for all accesses to the GenICam NodeMap tree
-                    self.m_node_map_remote_device = self.m_device.RemoteDevice().NodeMaps()[0]
+                #     # Get NodeMap of the RemoteDevice for all accesses to the GenICam NodeMap tree
+                        self.m_node_map_remote_device = self.m_device.RemoteDevice().NodeMaps()[0]
 
-                    return True
+                        return True
+            
         except Exception as e:
             # ...
             str_error = str(e)
@@ -91,8 +117,10 @@ class IDSCamera:
             h_max = self.m_node_map_remote_device.FindNode("Height").Maximum()
 
             if (x < x_min) or (y < y_min) or (x > x_max) or (y > y_max):
+                print('e1')
                 return False
             elif (width < w_min) or (height < h_min) or ((x + width) > w_max) or ((y + height) > h_max):
+                print('e2')
                 return False
             else:
                 # Now, set final AOI
@@ -105,7 +133,7 @@ class IDSCamera:
         except Exception as e:
             # ...
             str_error = str(e)
-
+            print(str(e))
         return False
 
     def config_image(self):
@@ -126,7 +154,7 @@ class IDSCamera:
             print(f'Post DigitalAll: {self.m_node_map_remote_device.FindNode('Gain').Value()}')
             
             print(f'Pre FPS: {self.m_node_map_remote_device.FindNode('AcquisitionFrameRate').Value()}')
-            self.m_node_map_remote_device.FindNode("AcquisitionFrameRate").SetValue(25)
+            self.m_node_map_remote_device.FindNode("AcquisitionFrameRate").SetValue(24)
             print(f'Post FPS: {self.m_node_map_remote_device.FindNode('AcquisitionFrameRate').Value()}')
             
             return True
@@ -203,9 +231,15 @@ class IDSCamera:
             component_enable_node = self.m_node_map_remote_device.FindNode("ComponentEnable")
             # print(component_selector_node.Value())
             if component_selector_node and component_enable_node:
-                self.m_node_map_remote_device.FindNode('ComponentSelector').SetCurrentEntry('PolarizationAngle')
-                self.m_node_map_remote_device.FindNode('ComponentEnable').SetValue(True)
-                print("PolarizationAngle component enabled")
+                component_selector_node.SetCurrentEntry('PolarizationAngle')
+                is_enabled = component_enable_node.Value()
+                if not is_enabled:
+                    # Enable if it's not already enabled
+                    component_enable_node.SetValue(True)
+                    print("PolarizationAngle component enabled.")
+                else:
+                    print("PolarizationAngle component is already enabled.")
+
                 return True
             else:
                 print("ComponentSelector or ComponentEnable node is not available.")
@@ -220,8 +254,13 @@ class IDSCamera:
             component_enable_node = self.m_node_map_remote_device.FindNode("ComponentEnable")
             if component_selector_node and component_enable_node:
                 component_selector_node.SetCurrentEntry("Intensity")
-                component_enable_node.SetValue(True)
-                print("Intensity component enabled")
+                is_enabled = component_enable_node.Value()
+                if not is_enabled:
+                    # Enable if it's not already enabled
+                    component_enable_node.SetValue(True)
+                    print("Intensity component enabled.")
+                else:
+                    print("Intensity component is already enabled.")
                 return True
             else:
                 print("ComponentSelector or ComponentEnable node is not available.")

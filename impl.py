@@ -13,8 +13,9 @@ class Imgpr():
         edges = cv2.Canny(img, th1, th2)
         return edges
     
-    def detect_circle(self, img, mis_dist):
-        circles = cv2.HoughCircles(img, cv2.HOUGH_GRADIENT, 1.5, mis_dist, param1 = 75, param2 = 80, minRadius = 300, maxRadius = 450)
+    def detect_circle(self, img, mis_dist, p1, p2, min_radius=250, max_radius=400):
+        circles = cv2.HoughCircles(img, cv2.HOUGH_GRADIENT, 1.5, minDist=mis_dist, param1 = p1, param2 = p2, minRadius = min_radius, maxRadius = max_radius)
+        # circles = cv2.HoughCircles(img, cv2.HOUGH_GRADIENT, 1.5, minDist=100, param1 = 60, param2 = 60, minRadius = 100, maxRadius = 200)
         return circles
 
     def detect_lines_p(self, edges, th=100, min_l = 30, max_lg = 60):
@@ -123,7 +124,7 @@ class Imgpr():
         # Ensure the angle is within the range [0, 180)
         if angle_degrees < 0:
             angle_degrees += 180
-        
+        angle_degrees = round(angle_degrees, 2)
         return angle_degrees
 
     def draw_line_through_circle(self, image, center, radius, angle_degrees, bgr_color=(255, 0, 0)):
